@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# verybadmusic.com
 
-## Getting Started
+A minimal, brutalist web player for DJ sets. Audio lives on Google Drive and
+streams straight to the browser; a password-protected admin manages the catalog.
+Built with Next.js (App Router), Tailwind v4 and shadcn/ui (base-nova). Dark mode
+by default.
 
-First, run the development server:
+## How it works
+
+- **Player** – a single native `<audio>` element skinned entirely with shadcn
+  controls. Native media is what makes **AirPlay** (Safari/iOS) and the Remote
+  Playback API (Chrome → Cast) possible. Playback persists across views via a
+  React context (`components/player/player-provider.tsx`).
+- **Streaming** – audio plays directly from Google Drive (no Vercel bandwidth).
+  Any Drive share link or file id is normalised in `lib/drive.ts` to
+  `https://drive.google.com/uc?export=download&id=<id>&confirm=t`. The mix files
+  must be shared "anyone with the link". If large-file seeking proves unreliable,
+  swap `driveStreamUrl` for a Range-proxy route – it is the only Drive touch-point.
+- **Storage** – the whole catalog is one public JSON document in Vercel Blob
+  (`catalog.json`), cover images sit alongside it. Reads go straight to Blob each
+  request so edits show up immediately; audio never passes through a function.
+- **Auth** – username/password from env, exchanged for a signed httpOnly session
+  cookie (`jose`). `proxy.ts` guards `/admin`.
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # then fill in the values
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Environment variables (`.env.local`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Purpose |
+| --- | --- |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Admin login |
+| `SESSION_SECRET` | Signs the session cookie (`openssl rand -base64 32`) |
+| Blob credentials | See below – `BLOB_STORE_ID` + `VERCEL_OIDC_TOKEN`, or a `BLOB_READ_WRITE_TOKEN` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Blob auth.** `@vercel/blob` v2 authenticates with OIDC: `BLOB_STORE_ID` plus a
+`VERCEL_OIDC_TOKEN`. On Vercel both are present automatically once a Blob store
+is connected – no static token needed. Locally, run
+`vercel link && vercel env pull .env.local` to fetch the store id and a
+short-lived OIDC token, or create a Read/Write token in the Blob store settings
+and set `BLOB_READ_WRITE_TOKEN`. Without credentials the app still runs – the
+catalog just reads as empty.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev          # dev server
+pnpm test         # unit tests (vitest) – drive parsing, sessions, schema, player reducer
+pnpm lint         # eslint
+pnpm build        # production build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploying to Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Import the repo; the framework preset is Next.js.
+2. Create / connect a **Blob** store (Storage tab). This provisions
+   `BLOB_STORE_ID` (+ a webhook key); the SDK authenticates via the auto-injected
+   `VERCEL_OIDC_TOKEN`. No static `BLOB_READ_WRITE_TOKEN` is required.
+3. Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SESSION_SECRET` in project env vars.
+4. Deploy. The public pages stay light (functions only run for admin writes and
+   the per-request catalog read); audio streams from Drive.
 
-## Deploy on Vercel
+## Manual checks (browser only)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+These need a real Drive mp3 and, for AirPlay, Safari/iOS:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Sign in at `/admin`, add a mix with a public Drive URL + cover, confirm it
+  appears on `/`.
+- Toggle tiles/list and dark/light; play a mix, scrub, change volume.
+- On macOS Safari / iOS the AirPlay button appears when a target is available.

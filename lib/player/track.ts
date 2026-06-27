@@ -1,0 +1,16 @@
+import type { Mix } from "@/lib/catalog/schema";
+import { driveStreamUrl } from "@/lib/drive";
+
+import type { PlayerTrack } from "./store";
+
+/** Map a stored mix to the minimal shape the player needs (incl. its stream URL). */
+export function mixToTrack(mix: Mix): PlayerTrack {
+  return {
+    id: mix.id,
+    title: mix.title,
+    artist: mix.artist,
+    coverUrl: mix.coverUrl,
+    src: driveStreamUrl(mix.driveUrl) ?? mix.driveUrl,
+    description: mix.description,
+  };
+}
