@@ -28,10 +28,10 @@ export function NowPlayingDrawer({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { current } = usePlayer();
+  const { current, expanded, setExpanded } = usePlayer();
 
   return (
-    <Drawer>
+    <Drawer open={expanded} onOpenChange={setExpanded}>
       <DrawerTrigger className={cn("min-w-0 text-left", className)}>
         {children}
       </DrawerTrigger>
@@ -85,9 +85,6 @@ export function NowPlayingDrawer({
 
           {current?.description ? (
             <div className="w-full border-t pt-4">
-              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                tracklist
-              </p>
               <pre className="font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-muted-foreground">
                 {current.description}
               </pre>

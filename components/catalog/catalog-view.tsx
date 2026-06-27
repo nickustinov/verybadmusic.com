@@ -67,7 +67,7 @@ export function CatalogView({
     const index = mixes.findIndex(
       (m) => slugify(m.title) === initialSlug || m.id === initialSlug,
     );
-    if (index >= 0) selectMix(mixes.map(mixToTrack), index);
+    if (index >= 0) selectMix(mixes.map(mixToTrack), index, { expand: true });
   }, [initialSlug, mixes, selectMix]);
 
   const allTags = React.useMemo(() => {

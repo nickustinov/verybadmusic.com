@@ -9,23 +9,42 @@ import { usePlayer } from "./player-provider";
 
 type Size = "icon-sm" | "icon" | "icon-lg";
 
-export function TransportControls({ size = "icon" }: { size?: Size }) {
+export function TransportControls({
+  size = "icon",
+  className,
+}: {
+  size?: Size;
+  className?: string;
+}) {
   const { state, toggle, next, prev } = usePlayer();
 
   return (
     <ButtonGroup>
-      <Button variant="outline" size={size} onClick={prev} aria-label="Previous">
+      <Button
+        variant="outline"
+        size={size}
+        className={className}
+        onClick={prev}
+        aria-label="Previous"
+      >
         <SkipBack />
       </Button>
       <Button
         variant="outline"
         size={size}
+        className={className}
         onClick={toggle}
         aria-label={state.isPlaying ? "Pause" : "Play"}
       >
         {state.isPlaying ? <Pause /> : <Play />}
       </Button>
-      <Button variant="outline" size={size} onClick={next} aria-label="Next">
+      <Button
+        variant="outline"
+        size={size}
+        className={className}
+        onClick={next}
+        aria-label="Next"
+      >
         <SkipForward />
       </Button>
     </ButtonGroup>

@@ -35,13 +35,19 @@ type PlayerContextValue = {
   state: PlayerState;
   current: PlayerTrack | null;
   playMix: (tracks: PlayerTrack[], index: number) => void;
-  selectMix: (tracks: PlayerTrack[], index: number) => void;
+  selectMix: (
+    tracks: PlayerTrack[],
+    index: number,
+    opts?: { expand?: boolean },
+  ) => void;
   toggle: () => void;
   next: () => void;
   prev: () => void;
   seek: (time: number) => void;
   setVolume: (volume: number) => void;
   toggleMute: () => void;
+  expanded: boolean;
+  setExpanded: (open: boolean) => void;
   airplay: AirplayState;
 };
 
@@ -59,6 +65,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const [airplayAvailable, setAirplayAvailable] = React.useState(false);
   const [airplayActive, setAirplayActive] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(false);
 
   const current = state.index >= 0 ? state.queue[state.index] ?? null : null;
   const currentSrc = current?.src ?? null;
@@ -169,9 +176,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_QUEUE", queue: tracks, index });
         dispatch({ type: "PLAY_AT", index });
       },
-      // Load a mix into the dock without auto-playing (used for shared links).
-      selectMix: (tracks, index) =>
-        dispatch({ type: "SET_QUEUE", queue: tracks, index }),
+      // Load a mix into the dock without auto-playing (used for shared links);
+      // optionally expand the full player view.
+      selectMix: (tracks, index, opts) => {
+        dispatch({ type: "SET_QUEUE", queue: tracks, index });
+        if (opts?.expand) setExpanded(true);
+      },
       toggle: () => dispatch({ type: "TOGGLE" }),
       next: () => dispatch({ type: "NEXT" }),
       prev: () => dispatch({ type: "PREV" }),
@@ -182,13 +192,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       },
       setVolume: (v) => dispatch({ type: "SET_VOLUME", volume: v }),
       toggleMute: () => dispatch({ type: "TOGGLE_MUTE" }),
+      expanded,
+      setExpanded,
       airplay: {
         available: airplayAvailable,
         active: airplayActive,
         show: showAirplay,
       },
     }),
-    [state, current, airplayAvailable, airplayActive, showAirplay],
+    [state, current, expanded, airplayAvailable, airplayActive, showAirplay],
   );
 
   return (

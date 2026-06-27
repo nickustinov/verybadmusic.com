@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { AirplayButton } from "./airplay-button";
 import { NowPlayingDrawer } from "./now-playing-drawer";
 import { usePlayer } from "./player-provider";
+import { ScrollingText } from "./scrolling-text";
 import { SeekBar } from "./seek-bar";
 import { TransportControls } from "./transport-controls";
 import { VolumeControl } from "./volume-control";
@@ -39,22 +40,22 @@ export function PlayerDock() {
             )}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-mono text-sm font-medium">
+            <ScrollingText className="font-mono text-sm font-medium">
               {current.title}
-            </span>
+            </ScrollingText>
             {current.artist ? (
-              <span className="block truncate font-mono text-xs text-muted-foreground">
+              <ScrollingText className="font-mono text-xs text-muted-foreground">
                 {current.artist}
-              </span>
+              </ScrollingText>
             ) : null}
           </span>
         </NowPlayingDrawer>
 
         <SeekBar className="hidden w-64 shrink-0 sm:flex" />
 
-        <div className="flex shrink-0 items-center gap-1">
-          <TransportControls size="icon-sm" />
-          <AirplayButton />
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-1">
+          <TransportControls size="icon" className="size-10 sm:size-8" />
+          <AirplayButton className="size-10 sm:size-8" />
           <VolumeControl className="hidden sm:inline-flex" />
         </div>
       </div>
