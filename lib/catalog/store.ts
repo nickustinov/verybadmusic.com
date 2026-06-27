@@ -1,39 +1,39 @@
 import "server-only";
 
-import { head, put } from "@vercel/blob";
+import { put } from "@vercel/blob";
+import { Redis } from "@upstash/redis";
 
 import { catalogSchema, EMPTY_CATALOG, type Catalog, type Mix } from "./schema";
 
 /**
- * The whole catalog is a single public JSON document in Vercel Blob. Reads go
- * straight to the blob each request (uncached) so the public list and the admin
- * always agree and edits show up immediately. For this low-traffic, admin-driven
- * site that is a single cheap lookup per visit; a tag cache can be layered on
- * later if needed. Audio never passes through here - it streams from Drive.
+ * Catalog metadata lives in Upstash Redis (Vercel KV): single-digit-ms reads and
+ * writes, strongly consistent, so admin edits show up instantly. Cover images
+ * still go to Vercel Blob (they need a public URL). Audio never passes through
+ * here - it streams from Google Drive via the /api/stream proxy (see lib/drive.ts).
  */
 
-const CATALOG_PATH = "catalog.json";
+const CATALOG_KEY = "catalog";
 
-async function catalogUrl(): Promise<string | null> {
-  try {
-    return (await head(CATALOG_PATH)).url;
-  } catch {
-    // Blob does not exist yet (fresh deploy) or no token configured locally.
-    return null;
-  }
+let client: Redis | null | undefined;
+
+function redis(): Redis | null {
+  if (client !== undefined) return client;
+  const url =
+    process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+  const token =
+    process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+  client = url && token ? new Redis({ url, token }) : null;
+  return client;
 }
 
 export async function readCatalog(): Promise<Catalog> {
-  const url = await catalogUrl();
-  if (!url) return EMPTY_CATALOG;
+  const db = redis();
+  if (!db) return EMPTY_CATALOG;
 
-  // Cache-bust the public CDN URL so an overwrite is read back immediately
-  // (read-your-writes) instead of serving a stale edge copy for a few seconds.
-  const fresh = `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
-  const res = await fetch(fresh, { cache: "no-store" });
-  if (!res.ok) return EMPTY_CATALOG;
+  const data = await db.get(CATALOG_KEY);
+  if (!data) return EMPTY_CATALOG;
 
-  const parsed = catalogSchema.safeParse(await res.json());
+  const parsed = catalogSchema.safeParse(data);
   return parsed.success ? parsed.data : EMPTY_CATALOG;
 }
 
@@ -46,14 +46,13 @@ export async function readMixes(): Promise<Mix[]> {
 }
 
 export async function writeCatalog(catalog: Catalog): Promise<void> {
-  const next: Catalog = { ...catalog, updatedAt: new Date().toISOString() };
-  await put(CATALOG_PATH, JSON.stringify(next), {
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    cacheControlMaxAge: 0,
-  });
+  const db = redis();
+  if (!db) {
+    throw new Error(
+      "KV is not configured. Set KV_REST_API_URL and KV_REST_API_TOKEN.",
+    );
+  }
+  await db.set(CATALOG_KEY, { ...catalog, updatedAt: new Date().toISOString() });
 }
 
 export async function removeMix(id: string): Promise<void> {

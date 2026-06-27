@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { loginAction, type LoginState } from "@/app/admin/login/actions";
+import { loginAction, type LoginState } from "@/app/vbm-admin/login/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,

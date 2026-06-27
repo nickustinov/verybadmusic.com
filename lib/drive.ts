@@ -1,9 +1,10 @@
 /**
  * Google Drive coupling lives entirely in this file. Playback goes through our
- * own /api/stream/<id> route, which proxies the Drive download endpoint with
- * Range support - direct Drive links return an HTML scan interstitial for large
- * files and break seeking, so the proxy is required. Nothing else in the app
- * references Drive directly.
+ * /api/stream/<id> route because Google blocks direct cross-origin browser
+ * access to its download endpoint (CORP: same-site blocks no-cors loads, and a
+ * Sec-Fetch-Site: cross-site 403 blocks CORS loads - and Sec-Fetch-Site cannot
+ * be removed from a browser request). A same-origin server proxy is the only way
+ * to play Drive audio in the browser. Files must be shared "anyone with link".
  */
 
 const URL_ID_PATTERNS: RegExp[] = [
@@ -33,7 +34,7 @@ export function parseDriveId(input: string | null | undefined): string | null {
   return BARE_ID.test(value) ? value : null;
 }
 
-/** Same-origin streaming URL for the player to use as the <audio> src. */
+/** Same-origin streaming URL (proxy) for the player to use as the <audio> src. */
 export function driveStreamUrl(input: string | null | undefined): string | null {
   const id = parseDriveId(input);
   if (!id) return null;

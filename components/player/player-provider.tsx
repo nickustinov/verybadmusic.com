@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 
 import {
   initialPlayerState,
@@ -8,6 +9,13 @@ import {
   type PlayerState,
   type PlayerTrack,
 } from "@/lib/player/store";
+
+const MEDIA_ERR: Record<number, string> = {
+  1: "ABORTED",
+  2: "NETWORK",
+  3: "DECODE",
+  4: "SRC_NOT_SUPPORTED",
+};
 
 /**
  * Owns the single <audio> element for the whole app so playback survives view
@@ -61,11 +69,19 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!audio || !currentSrc) return;
     if (loadedSrc.current !== currentSrc) {
       loadedSrc.current = currentSrc;
+      console.info("[vbm player] loading src:", currentSrc);
       audio.src = currentSrc;
       audio.load();
     }
     if (isPlaying) {
-      void audio.play().catch(() => dispatch({ type: "PAUSE" }));
+      void audio
+        .play()
+        .then(() => console.info("[vbm player] play() started"))
+        .catch((err) => {
+          console.error("[vbm player] play() rejected:", err?.name, err?.message);
+          toast.error(`play blocked: ${err?.name ?? "error"}`);
+          dispatch({ type: "PAUSE" });
+        });
     } else {
       audio.pause();
     }
@@ -177,6 +193,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       <audio
         ref={audioRef}
         preload="metadata"
+        onLoadedMetadata={(e) =>
+          console.info(
+            "[vbm player] loadedmetadata · duration:",
+            e.currentTarget.duration,
+          )
+        }
         onTimeUpdate={(e) =>
           dispatch({ type: "SET_TIME", time: e.currentTarget.currentTime })
         }
@@ -185,6 +207,21 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           if (Number.isFinite(d)) dispatch({ type: "SET_DURATION", duration: d });
         }}
         onEnded={() => dispatch({ type: "ENDED" })}
+        onStalled={() => console.warn("[vbm player] stalled")}
+        onError={(e) => {
+          const el = e.currentTarget;
+          const err = el.error;
+          const code = err ? (MEDIA_ERR[err.code] ?? `code ${err.code}`) : "unknown";
+          console.error("[vbm player] audio error", {
+            code,
+            message: err?.message,
+            src: el.currentSrc || el.src,
+            networkState: el.networkState,
+            readyState: el.readyState,
+          });
+          toast.error(`playback error: ${code}`);
+          dispatch({ type: "PAUSE" });
+        }}
       />
     </PlayerContext.Provider>
   );

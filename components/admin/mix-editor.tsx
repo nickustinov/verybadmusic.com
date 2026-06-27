@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-import { saveMixAction, type MixFormState } from "@/app/admin/actions";
+import { saveMixAction, type MixFormState } from "@/app/vbm-admin/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,7 +129,7 @@ export function MixEditor({ mix }: { mix?: Mix }) {
     <main className="mx-auto w-full max-w-2xl px-3 pt-6 pb-28 sm:px-4">
       <header className="mb-6 flex items-center gap-3">
         <Link
-          href="/admin"
+          href="/vbm-admin"
           aria-label="Back to admin"
           className={buttonVariants({ variant: "ghost", size: "icon" })}
         >
@@ -250,7 +250,7 @@ export function MixEditor({ mix }: { mix?: Mix }) {
 
         <div className="mt-2 flex items-center justify-end gap-2 border-t pt-4">
           <Link
-            href="/admin"
+            href="/vbm-admin"
             className={buttonVariants({ variant: "outline" })}
           >
             cancel

@@ -12,12 +12,12 @@ export async function loginAction(
 ): Promise<LoginState> {
   const username = String(formData.get("username") ?? "");
   const password = String(formData.get("password") ?? "");
-  const from = String(formData.get("from") ?? "/admin");
+  const from = String(formData.get("from") ?? "/vbm-admin");
 
   if (!checkCredentials(username, password)) {
     return { error: "Invalid username or password." };
   }
 
   await createAdminSession();
-  redirect(from.startsWith("/admin") ? from : "/admin");
+  redirect(from.startsWith("/vbm-admin") ? from : "/vbm-admin");
 }

@@ -83,7 +83,7 @@ export function CatalogView({ mixes }: { mixes: Mix[] }) {
             the crate is empty.
           </p>
         </div>
-        <Link href="/admin" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Link href="/vbm-admin" className={buttonVariants({ variant: "outline", size: "sm" })}>
           go to admin
         </Link>
       </div>

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { nanoid } from "nanoid";
 
@@ -62,7 +63,8 @@ export async function saveMixAction(
     coverUrl = await uploadCover(id, cover);
   }
 
-  const maxSort = catalog.mixes.reduce((max, m) => Math.max(max, m.sort), -1);
+  // New mixes go to the top of the list (lowest sort value).
+  const minSort = catalog.mixes.reduce((min, m) => Math.min(min, m.sort), 0);
   const mix: Mix = {
     id,
     title: data.title,
@@ -75,7 +77,7 @@ export async function saveMixAction(
     tags: parseTags(data.tags),
     releasedAt: data.releasedAt,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
-    sort: existing?.sort ?? maxSort + 1,
+    sort: existing?.sort ?? minSort - 1,
   };
 
   // Single write from the catalog we already read (no extra round-trips).
@@ -84,20 +86,22 @@ export async function saveMixAction(
     : [...catalog.mixes, mix];
   await writeCatalog({ ...catalog, mixes });
 
-  redirect("/admin");
+  redirect("/vbm-admin");
 }
 
 export async function deleteMixAction(id: string): Promise<void> {
   await assertAdmin();
   await removeMix(id);
+  revalidatePath("/vbm-admin");
 }
 
 export async function reorderMixesAction(orderedIds: string[]): Promise<void> {
   await assertAdmin();
   await setMixOrder(orderedIds);
+  revalidatePath("/vbm-admin");
 }
 
 export async function logoutAction(): Promise<void> {
   await destroyAdminSession();
-  redirect("/admin/login");
+  redirect("/vbm-admin/login");
 }

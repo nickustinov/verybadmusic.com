@@ -6,7 +6,7 @@ export default async function LoginPage({
   searchParams: Promise<{ from?: string }>;
 }) {
   const { from } = await searchParams;
-  const safeFrom = from && from.startsWith("/admin") ? from : "/admin";
+  const safeFrom = from && from.startsWith("/vbm-admin") ? from : "/vbm-admin";
 
   return (
     <main className="flex min-h-dvh items-center justify-center p-4">

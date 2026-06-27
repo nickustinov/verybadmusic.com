@@ -1,15 +1,42 @@
 import { parseDriveId } from "@/lib/drive";
 
 /**
- * Streams a Google Drive audio file through our origin so the browser gets real
- * audio (not Drive's HTML "virus scan" interstitial), with Range support for
- * seeking. This is the proxy fallback to direct Drive links: audio now flows
- * through the function, but seeking and large files work reliably.
+ * Streams a Google Drive audio file through our origin. This proxy is required:
+ * Google blocks direct cross-origin browser playback of its download endpoint
+ * (CORP: same-site blocks no-cors loads, and a Sec-Fetch-Site: cross-site 403
+ * blocks CORS loads), so the browser cannot fetch Drive audio directly. A
+ * same-origin server request has none of those headers, so it works - with
+ * Range support for seeking. Trade-off: audio flows through the function.
  */
 
 export const runtime = "edge";
 
 const DOWNLOAD = "https://drive.usercontent.google.com/download";
+
+// Drive serves media as application/octet-stream, so we set the real audio MIME
+// type from the filename. wav/mp3 play everywhere; aiff only in Safari.
+const AUDIO_MIME: Record<string, string> = {
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  wave: "audio/wav",
+  aif: "audio/aiff",
+  aiff: "audio/aiff",
+  aifc: "audio/aiff",
+  flac: "audio/flac",
+  m4a: "audio/mp4",
+  aac: "audio/aac",
+  ogg: "audio/ogg",
+  oga: "audio/ogg",
+  opus: "audio/ogg",
+};
+
+function audioMimeFromDisposition(disposition: string | null): string | null {
+  if (!disposition) return null;
+  const ext = disposition
+    .match(/filename\*?=(?:UTF-8'')?["']?[^"';]*\.([a-z0-9]+)/i)?.[1]
+    ?.toLowerCase();
+  return (ext && AUDIO_MIME[ext]) || null;
+}
 
 async function fetchFromDrive(id: string, range: string | null): Promise<Response> {
   const base = `${DOWNLOAD}?id=${id}&export=download`;
@@ -49,7 +76,6 @@ export async function GET(
 
   const headers = new Headers();
   for (const name of [
-    "content-type",
     "content-length",
     "content-range",
     "accept-ranges",
@@ -61,9 +87,20 @@ export async function GET(
   }
   if (!headers.has("accept-ranges")) headers.set("accept-ranges", "bytes");
 
-  // Guard against a stray HTML response leaking through as "audio".
-  const ct = headers.get("content-type") ?? "";
-  if (!ct || ct.includes("text/html")) headers.set("content-type", "audio/mpeg");
+  // Drive sends application/octet-stream (or an HTML page on failure); resolve
+  // the real audio type from the filename so browsers know how to decode it.
+  const upstreamType = upstream.headers.get("content-type") ?? "";
+  const fromName = audioMimeFromDisposition(
+    upstream.headers.get("content-disposition"),
+  );
+  const isGenericOrHtml =
+    !upstreamType ||
+    upstreamType.includes("octet-stream") ||
+    upstreamType.includes("text/html");
+  headers.set(
+    "content-type",
+    isGenericOrHtml ? (fromName ?? "audio/mpeg") : upstreamType,
+  );
 
   headers.set("cache-control", "public, max-age=3600");
 

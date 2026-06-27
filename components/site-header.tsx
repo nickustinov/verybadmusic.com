@@ -2,9 +2,6 @@
 
 import Link from "next/link";
 
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
 import { ModeToggle } from "./mode-toggle";
 
 export function SiteHeader() {
@@ -18,12 +15,6 @@ export function SiteHeader() {
           verybadmusic
         </Link>
         <nav className="flex items-center gap-1">
-          <Link
-            href="/admin"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "font-mono lowercase")}
-          >
-            admin
-          </Link>
           <ModeToggle />
         </nav>
       </div>

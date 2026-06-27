@@ -4,7 +4,7 @@ import * as React from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { deleteMixAction } from "@/app/admin/actions";
+import { deleteMixAction } from "@/app/vbm-admin/actions";
 import {
   AlertDialog,
   AlertDialogAction,

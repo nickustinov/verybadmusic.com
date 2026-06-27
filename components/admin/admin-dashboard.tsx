@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowUp, LogOut, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import { logoutAction, reorderMixesAction } from "@/app/admin/actions";
+import { logoutAction, reorderMixesAction } from "@/app/vbm-admin/actions";
 import { CoverArt } from "@/components/catalog/cover-art";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -56,7 +56,7 @@ export function AdminDashboard({ mixes }: { mixes: Mix[] }) {
           >
             view site
           </Link>
-          <Link href="/admin/new" className={buttonVariants({ size: "sm" })}>
+          <Link href="/vbm-admin/new" className={buttonVariants({ size: "sm" })}>
             <Plus /> add mix
           </Link>
           <form action={logoutAction}>
@@ -102,8 +102,23 @@ export function AdminDashboard({ mixes }: { mixes: Mix[] }) {
                       {mix.artist || "–"}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden font-mono text-xs text-muted-foreground sm:table-cell">
-                    {mix.tags.join(" / ") || "–"}
+                  <TableCell className="hidden max-w-[16rem] align-top sm:table-cell">
+                    {mix.tags.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {mix.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="border px-1 font-mono text-[10px] lowercase text-muted-foreground"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        –
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
                     {mix.durationSec ? formatTime(mix.durationSec) : "··:··"}
@@ -129,7 +144,7 @@ export function AdminDashboard({ mixes }: { mixes: Mix[] }) {
                         <ArrowDown />
                       </Button>
                       <Link
-                        href={`/admin/${mix.id}/edit`}
+                        href={`/vbm-admin/${mix.id}/edit`}
                         aria-label={`Edit ${mix.title}`}
                         className={buttonVariants({
                           variant: "ghost",
