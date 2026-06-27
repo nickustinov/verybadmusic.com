@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTime } from "./format";
+import { formatTime, isoDuration } from "./format";
 
 describe("formatTime", () => {
   it("formats seconds under a minute", () => {
@@ -24,5 +24,23 @@ describe("formatTime", () => {
     expect(formatTime(Number.NaN)).toBe("0:00");
     expect(formatTime(-10)).toBe("0:00");
     expect(formatTime(Number.POSITIVE_INFINITY)).toBe("0:00");
+  });
+});
+
+describe("isoDuration", () => {
+  it("formats hours, minutes and seconds", () => {
+    expect(isoDuration(3661)).toBe("PT1H1M1S");
+    expect(isoDuration(5294)).toBe("PT1H28M14S");
+  });
+
+  it("omits empty components", () => {
+    expect(isoDuration(90)).toBe("PT1M30S");
+    expect(isoDuration(3600)).toBe("PT1H");
+  });
+
+  it("guards against invalid input", () => {
+    expect(isoDuration(0)).toBe("PT0S");
+    expect(isoDuration(-5)).toBe("PT0S");
+    expect(isoDuration(Number.NaN)).toBe("PT0S");
   });
 });
