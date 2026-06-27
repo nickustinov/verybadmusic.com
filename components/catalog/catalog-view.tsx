@@ -8,6 +8,7 @@ import { usePlayer } from "@/components/player/player-provider";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { Mix } from "@/lib/catalog/schema";
 import { mixToTrack } from "@/lib/player/track";
+import { slugify } from "@/lib/slug";
 
 import { MixCard } from "./mix-card";
 import { MixRow } from "./mix-row";
@@ -46,11 +47,28 @@ function useViewMode(): [ViewMode, (next: ViewMode) => void] {
   return [view, changeView];
 }
 
-export function CatalogView({ mixes }: { mixes: Mix[] }) {
-  const { current, state, playMix, toggle } = usePlayer();
+export function CatalogView({
+  mixes,
+  initialSlug,
+}: {
+  mixes: Mix[];
+  initialSlug?: string;
+}) {
+  const { current, state, playMix, selectMix, toggle } = usePlayer();
   const [view, changeView] = useViewMode();
 
   const [tag, setTag] = React.useState<string | null>(null);
+
+  // Preselect a shared mix once on mount (loaded paused; browsers block autoplay).
+  const didPreselect = React.useRef(false);
+  React.useEffect(() => {
+    if (didPreselect.current || !initialSlug) return;
+    didPreselect.current = true;
+    const index = mixes.findIndex(
+      (m) => slugify(m.title) === initialSlug || m.id === initialSlug,
+    );
+    if (index >= 0) selectMix(mixes.map(mixToTrack), index);
+  }, [initialSlug, mixes, selectMix]);
 
   const allTags = React.useMemo(() => {
     const seen = new Set<string>();

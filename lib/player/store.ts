@@ -11,6 +11,7 @@ export type PlayerTrack = {
   coverUrl: string;
   src: string;
   description?: string;
+  slug?: string;
 };
 
 export type PlayerState = {

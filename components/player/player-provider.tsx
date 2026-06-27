@@ -35,6 +35,7 @@ type PlayerContextValue = {
   state: PlayerState;
   current: PlayerTrack | null;
   playMix: (tracks: PlayerTrack[], index: number) => void;
+  selectMix: (tracks: PlayerTrack[], index: number) => void;
   toggle: () => void;
   next: () => void;
   prev: () => void;
@@ -69,19 +70,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!audio || !currentSrc) return;
     if (loadedSrc.current !== currentSrc) {
       loadedSrc.current = currentSrc;
-      console.info("[vbm player] loading src:", currentSrc);
       audio.src = currentSrc;
       audio.load();
     }
     if (isPlaying) {
-      void audio
-        .play()
-        .then(() => console.info("[vbm player] play() started"))
-        .catch((err) => {
-          console.error("[vbm player] play() rejected:", err?.name, err?.message);
-          toast.error(`play blocked: ${err?.name ?? "error"}`);
-          dispatch({ type: "PAUSE" });
-        });
+      void audio.play().catch(() => dispatch({ type: "PAUSE" }));
     } else {
       audio.pause();
     }
@@ -94,6 +87,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audio.volume = volume;
     audio.muted = muted;
   }, [volume, muted]);
+
+  // Reflect the current track in the address bar so it can be copied/shared,
+  // without a navigation (covers play, next/prev and shared-link selection).
+  React.useEffect(() => {
+    if (current?.slug) {
+      window.history.replaceState(null, "", `/m/${current.slug}`);
+    }
+  }, [current?.slug]);
 
   // Wire up AirPlay (Safari) and the Remote Playback API (Chrome → Cast).
   React.useEffect(() => {
@@ -168,6 +169,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_QUEUE", queue: tracks, index });
         dispatch({ type: "PLAY_AT", index });
       },
+      // Load a mix into the dock without auto-playing (used for shared links).
+      selectMix: (tracks, index) =>
+        dispatch({ type: "SET_QUEUE", queue: tracks, index }),
       toggle: () => dispatch({ type: "TOGGLE" }),
       next: () => dispatch({ type: "NEXT" }),
       prev: () => dispatch({ type: "PREV" }),
@@ -193,12 +197,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       <audio
         ref={audioRef}
         preload="metadata"
-        onLoadedMetadata={(e) =>
-          console.info(
-            "[vbm player] loadedmetadata · duration:",
-            e.currentTarget.duration,
-          )
-        }
         onTimeUpdate={(e) =>
           dispatch({ type: "SET_TIME", time: e.currentTarget.currentTime })
         }
@@ -207,18 +205,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           if (Number.isFinite(d)) dispatch({ type: "SET_DURATION", duration: d });
         }}
         onEnded={() => dispatch({ type: "ENDED" })}
-        onStalled={() => console.warn("[vbm player] stalled")}
         onError={(e) => {
-          const el = e.currentTarget;
-          const err = el.error;
+          const err = e.currentTarget.error;
           const code = err ? (MEDIA_ERR[err.code] ?? `code ${err.code}`) : "unknown";
-          console.error("[vbm player] audio error", {
-            code,
-            message: err?.message,
-            src: el.currentSrc || el.src,
-            networkState: el.networkState,
-            readyState: el.readyState,
-          });
           toast.error(`playback error: ${code}`);
           dispatch({ type: "PAUSE" });
         }}
