@@ -102,7 +102,10 @@ export async function GET(
     isGenericOrHtml ? (fromName ?? "audio/mpeg") : upstreamType,
   );
 
-  headers.set("cache-control", "public, max-age=3600");
+  // Must NOT be CDN-cached: Vercel's cache does not vary by Range, so a cached
+  // partial response (e.g. Safari's 2-byte probe) would be served for every
+  // range and break playback. Each range request is served fresh.
+  headers.set("cache-control", "no-store");
 
   return new Response(upstream.body, { status: upstream.status, headers });
 }
