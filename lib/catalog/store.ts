@@ -9,7 +9,7 @@ import { catalogSchema, EMPTY_CATALOG, type Catalog, type Mix } from "./schema";
  * Catalog metadata lives in Upstash Redis (Vercel KV): single-digit-ms reads and
  * writes, strongly consistent, so admin edits show up instantly. Cover images
  * still go to Vercel Blob (they need a public URL). Audio never passes through
- * here - it streams from Google Drive via the /api/stream proxy (see lib/drive.ts).
+ * here - it streams directly from the Google Drive API (see lib/drive.ts).
  */
 
 const CATALOG_KEY = "catalog";
