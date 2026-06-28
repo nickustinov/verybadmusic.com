@@ -22,7 +22,7 @@ export function PlayerDock() {
   if (!current) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 overflow-x-clip border-t">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t">
       {current.coverUrl ? (
         <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -35,7 +35,7 @@ export function PlayerDock() {
       <div className="relative z-10">
         <NowPlayingMarquee />
         <div className="vbm-dock mx-auto flex h-16 max-w-5xl items-center gap-3 px-3 sm:px-4">
-        <NowPlayingDrawer className="flex min-w-0 flex-1 items-center gap-3">
+        <NowPlayingDrawer className="flex min-w-0 flex-1 items-center gap-3 overflow-x-clip">
           {skin === "cassette" ? (
             <Cassette
               playing={state.isPlaying}

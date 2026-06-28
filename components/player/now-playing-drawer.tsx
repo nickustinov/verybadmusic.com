@@ -52,7 +52,7 @@ export function NowPlayingDrawer({
           aria-label="Close"
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon" }),
-            "absolute right-3 top-3 z-10",
+            "absolute right-3 top-3 z-20",
           )}
         >
           <X className="size-5" />
