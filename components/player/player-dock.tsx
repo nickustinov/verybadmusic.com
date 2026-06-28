@@ -35,7 +35,7 @@ export function PlayerDock() {
       <div className="relative z-10">
         <NowPlayingMarquee />
         <div className="vbm-dock mx-auto flex h-16 max-w-5xl items-center gap-3 px-3 sm:px-4">
-        <NowPlayingDrawer className="flex min-w-0 flex-1 items-center gap-3 overflow-x-clip">
+        <NowPlayingDrawer className="flex min-w-0 flex-1 items-center gap-3 max-sm:overflow-x-clip">
           {skin === "cassette" ? (
             <Cassette
               playing={state.isPlaying}

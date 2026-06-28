@@ -705,7 +705,7 @@
 /* On mobile, slide it far left so only the right half of the tape shows. */
 @media (max-width: 639px) {
   .vbm-dock-cassette {
-    margin-left: -6.5rem;
+    margin-left: -9rem;
   }
 }
 
