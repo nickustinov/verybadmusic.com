@@ -13,6 +13,7 @@ import { catalogSchema, EMPTY_CATALOG, type Catalog, type Mix } from "./schema";
  */
 
 const CATALOG_KEY = "catalog";
+const PLAYS_KEY = "mix:plays";
 
 let client: Redis | null | undefined;
 
@@ -37,12 +38,31 @@ export async function readCatalog(): Promise<Catalog> {
   return parsed.success ? parsed.data : EMPTY_CATALOG;
 }
 
-/** Mixes sorted for display (lowest `sort` first, newest first on ties). */
+/** Play counts live in a Redis hash so they can be bumped atomically (HINCRBY)
+ *  without rewriting the whole catalog document on every play. */
+async function readPlays(): Promise<Record<string, number>> {
+  const db = redis();
+  if (!db) return {};
+  const raw = (await db.hgetall(PLAYS_KEY)) ?? {};
+  const plays: Record<string, number> = {};
+  for (const [id, count] of Object.entries(raw)) plays[id] = Number(count) || 0;
+  return plays;
+}
+
+/** Mixes sorted for display (lowest `sort` first, newest first on ties), with
+ *  live play counts merged in from the plays hash. */
 export async function readMixes(): Promise<Mix[]> {
-  const { mixes } = await readCatalog();
-  return [...mixes].sort(
-    (a, b) => a.sort - b.sort || b.createdAt.localeCompare(a.createdAt),
-  );
+  const [{ mixes }, plays] = await Promise.all([readCatalog(), readPlays()]);
+  return mixes
+    .map((m) => ({ ...m, plays: plays[m.id] ?? 0 }))
+    .sort((a, b) => a.sort - b.sort || b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Atomically record one play of a mix. */
+export async function bumpPlays(id: string): Promise<void> {
+  const db = redis();
+  if (!db) return;
+  await db.hincrby(PLAYS_KEY, id, 1);
 }
 
 export async function writeCatalog(catalog: Catalog): Promise<void> {
@@ -61,6 +81,7 @@ export async function removeMix(id: string): Promise<void> {
     ...catalog,
     mixes: catalog.mixes.filter((m) => m.id !== id),
   });
+  await redis()?.hdel(PLAYS_KEY, id);
 }
 
 /** Persist a new display order from a list of mix ids (top to bottom). */

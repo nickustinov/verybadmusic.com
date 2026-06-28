@@ -15,6 +15,30 @@ export function formatTime(totalSeconds: number): string {
   return `${minutes}:${ss}`;
 }
 
+const MONTHS = [
+  "jan", "feb", "mar", "apr", "may", "jun",
+  "jul", "aug", "sep", "oct", "nov", "dec",
+];
+
+/** Format a play count compactly (e.g. 1200 -> 1.2k). */
+export function formatCount(count: number): string {
+  if (!Number.isFinite(count) || count < 1000) return String(Math.max(0, count | 0));
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  })
+    .format(count)
+    .toLowerCase();
+}
+
+/** Format a stored release date (YYYY-MM-DD) as "mar 2024"; pass anything else through. */
+export function formatReleaseDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})/.exec(value);
+  if (!match) return value;
+  const month = MONTHS[Number(match[2]) - 1];
+  return month ? `${month} ${match[1]}` : match[1];
+}
+
 /** Format a duration as an ISO 8601 string (e.g. PT1H14M0S) for structured data. */
 export function isoDuration(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return "PT0S";

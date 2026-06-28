@@ -1,9 +1,9 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
+import { Headphones, Pause, Play } from "lucide-react";
 
 import type { Mix } from "@/lib/catalog/schema";
-import { formatTime } from "@/lib/format";
+import { formatCount, formatReleaseDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { CoverArt } from "./cover-art";
@@ -52,11 +52,14 @@ export function MixCard({
         <span className="truncate text-xs text-muted-foreground group-hover:text-background/70">
           {mix.artist || "–"}
         </span>
-        {mix.durationSec ? (
-          <span className="font-mono text-[10px] tabular-nums text-muted-foreground group-hover:text-background/60">
-            {formatTime(mix.durationSec)}
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[10px] tabular-nums text-muted-foreground group-hover:text-background/60">
+          {mix.durationSec ? <span>{formatTime(mix.durationSec)}</span> : null}
+          {mix.releasedAt ? <span>{formatReleaseDate(mix.releasedAt)}</span> : null}
+          <span className="inline-flex items-center gap-0.5">
+            <Headphones className="size-2.5" />
+            {formatCount(mix.plays)}
           </span>
-        ) : null}
+        </span>
         {mix.tags.length > 0 ? (
           <span className="mt-0.5 flex flex-wrap gap-1">
             {mix.tags.slice(0, 3).map((tag) => (

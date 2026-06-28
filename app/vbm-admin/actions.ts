@@ -78,6 +78,8 @@ export async function saveMixAction(
     releasedAt: data.releasedAt,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     sort: existing?.sort ?? minSort - 1,
+    // Play counts are tracked atomically in a separate KV hash (see store.ts).
+    plays: existing?.plays ?? 0,
   };
 
   // Single write from the catalog we already read (no extra round-trips).

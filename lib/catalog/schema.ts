@@ -14,6 +14,7 @@ export const mixSchema = z.object({
   releasedAt: z.string().default(""),
   createdAt: z.string().min(1),
   sort: z.number().default(0),
+  plays: z.number().int().nonnegative().default(0),
 });
 export type Mix = z.infer<typeof mixSchema>;
 

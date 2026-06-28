@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTime, isoDuration } from "./format";
+import { formatCount, formatReleaseDate, formatTime, isoDuration } from "./format";
 
 describe("formatTime", () => {
   it("formats seconds under a minute", () => {
@@ -24,6 +24,37 @@ describe("formatTime", () => {
     expect(formatTime(Number.NaN)).toBe("0:00");
     expect(formatTime(-10)).toBe("0:00");
     expect(formatTime(Number.POSITIVE_INFINITY)).toBe("0:00");
+  });
+});
+
+describe("formatCount", () => {
+  it("shows small counts verbatim", () => {
+    expect(formatCount(0)).toBe("0");
+    expect(formatCount(7)).toBe("7");
+    expect(formatCount(999)).toBe("999");
+  });
+
+  it("compacts thousands", () => {
+    expect(formatCount(1000)).toBe("1k");
+    expect(formatCount(1200)).toBe("1.2k");
+    expect(formatCount(15400)).toBe("15.4k");
+  });
+
+  it("guards against invalid input", () => {
+    expect(formatCount(Number.NaN)).toBe("0");
+    expect(formatCount(-5)).toBe("0");
+  });
+});
+
+describe("formatReleaseDate", () => {
+  it("formats ISO dates as month and year", () => {
+    expect(formatReleaseDate("2024-03-15")).toBe("mar 2024");
+    expect(formatReleaseDate("2020-12-01")).toBe("dec 2020");
+  });
+
+  it("passes unparseable values through", () => {
+    expect(formatReleaseDate("")).toBe("");
+    expect(formatReleaseDate("summer 2021")).toBe("summer 2021");
   });
 });
 

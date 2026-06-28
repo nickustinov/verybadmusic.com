@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Disc3 } from "lucide-react";
 
+import { recordPlayAction } from "@/app/actions";
 import { usePlayer } from "@/components/player/player-provider";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { Mix } from "@/lib/catalog/schema";
@@ -12,7 +13,22 @@ import { slugify } from "@/lib/slug";
 
 import { MixCard } from "./mix-card";
 import { MixRow } from "./mix-row";
+import { SortSelect, type SortMode } from "./sort-select";
 import { ViewSwitcher, type ViewMode } from "./view-switcher";
+
+/** Reorder the (already added-order) mixes for the chosen sort. */
+function sortMixes(mixes: Mix[], mode: SortMode): Mix[] {
+  if (mode === "added") return mixes;
+  if (mode === "plays") {
+    return [...mixes].sort((a, b) => b.plays - a.plays);
+  }
+  // Newest release first; mixes without a release date sink to the bottom.
+  return [...mixes].sort((a, b) => {
+    if (!a.releasedAt) return b.releasedAt ? 1 : 0;
+    if (!b.releasedAt) return -1;
+    return b.releasedAt.localeCompare(a.releasedAt);
+  });
+}
 
 const STORAGE_KEY = "vbm:view";
 const VIEW_EVENT = "vbm:view-change";
@@ -58,6 +74,7 @@ export function CatalogView({
   const [view, changeView] = useViewMode();
 
   const [tag, setTag] = React.useState<string | null>(null);
+  const [sort, setSort] = React.useState<SortMode>("added");
 
   // Preselect a shared mix once on mount (loaded paused; browsers block autoplay).
   const didPreselect = React.useRef(false);
@@ -76,10 +93,10 @@ export function CatalogView({
     return [...seen].sort((a, b) => a.localeCompare(b));
   }, [mixes]);
 
-  const visible = React.useMemo(
-    () => (tag ? mixes.filter((m) => m.tags.includes(tag)) : mixes),
-    [mixes, tag],
-  );
+  const visible = React.useMemo(() => {
+    const filtered = tag ? mixes.filter((m) => m.tags.includes(tag)) : mixes;
+    return sortMixes(filtered, sort);
+  }, [mixes, tag, sort]);
 
   const tracks = React.useMemo(() => visible.map(mixToTrack), [visible]);
 
@@ -89,6 +106,7 @@ export function CatalogView({
       return;
     }
     playMix(tracks, index);
+    void recordPlayAction(visible[index].id);
   };
 
   if (mixes.length === 0) {
@@ -114,7 +132,10 @@ export function CatalogView({
         <p className="font-mono text-xs text-muted-foreground">
           {visible.length} mix{visible.length === 1 ? "" : "es"}
         </p>
-        <ViewSwitcher value={view} onChange={changeView} />
+        <div className="flex items-center gap-2">
+          <SortSelect value={sort} onChange={setSort} />
+          <ViewSwitcher value={view} onChange={changeView} />
+        </div>
       </div>
 
       {allTags.length > 0 ? (

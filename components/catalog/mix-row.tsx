@@ -1,9 +1,9 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
+import { Headphones, Pause, Play } from "lucide-react";
 
 import type { Mix } from "@/lib/catalog/schema";
-import { formatTime } from "@/lib/format";
+import { formatCount, formatReleaseDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import { CoverArt } from "./cover-art";
@@ -47,10 +47,15 @@ export function MixRow({
         <span className="block truncate text-xs text-muted-foreground group-hover:text-background/70">
           {mix.artist || "–"}
           {mix.tags.length > 0 ? `  ·  ${mix.tags.join(" / ")}` : ""}
+          {mix.releasedAt ? `  ·  ${formatReleaseDate(mix.releasedAt)}` : ""}
         </span>
       </span>
-      <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground group-hover:text-background/70">
-        {mix.durationSec ? formatTime(mix.durationSec) : "··:··"}
+      <span className="flex shrink-0 items-center gap-3 font-mono text-xs tabular-nums text-muted-foreground group-hover:text-background/70">
+        <span className="inline-flex items-center gap-1">
+          <Headphones className="size-3" />
+          {formatCount(mix.plays)}
+        </span>
+        <span>{mix.durationSec ? formatTime(mix.durationSec) : "··:··"}</span>
       </span>
     </button>
   );
