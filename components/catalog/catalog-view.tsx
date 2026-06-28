@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Disc3 } from "lucide-react";
+import { Dice5, Disc3 } from "lucide-react";
 
 import { recordPlayAction } from "@/app/actions";
 import { usePlayer } from "@/components/player/player-provider";
@@ -109,6 +109,13 @@ export function CatalogView({
     void recordPlayAction(visible[index].id);
   };
 
+  // Play a random mix from the whole catalog, ignoring filter/sort.
+  const shuffle = () => {
+    const index = Math.floor(Math.random() * mixes.length);
+    playMix(mixes.map(mixToTrack), index);
+    void recordPlayAction(mixes[index].id);
+  };
+
   if (mixes.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 border border-dashed py-20 text-center">
@@ -133,6 +140,15 @@ export function CatalogView({
           {visible.length} mix{visible.length === 1 ? "" : "es"}
         </p>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono lowercase"
+            onClick={shuffle}
+          >
+            <Dice5 />
+            random
+          </Button>
           <SortSelect value={sort} onChange={setSort} />
           <ViewSwitcher value={view} onChange={changeView} />
         </div>
