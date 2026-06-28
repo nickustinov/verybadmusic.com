@@ -1,5 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Anton,
+  EB_Garamond,
+  Geist_Mono,
+  Inter,
+  Permanent_Marker,
+  Press_Start_2P,
+  VT323,
+} from "next/font/google";
+
+import { DEFAULT_THEME, THEMES } from "@/lib/theme";
 
 import { PlayerDock } from "@/components/player/player-dock";
 import { PlayerProvider } from "@/components/player/player-provider";
@@ -14,14 +24,36 @@ import {
 
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Skin typefaces (see lib/theme.ts). Loaded once, selected via CSS per skin.
+const ebGaramond = EB_Garamond({
+  variable: "--font-eb-garamond",
+  subsets: ["latin"],
+});
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const anton = Anton({
+  variable: "--font-anton",
+  subsets: ["latin"],
+  weight: "400",
+});
+const permanentMarker = Permanent_Marker({
+  variable: "--font-permanent-marker",
+  subsets: ["latin"],
+  weight: "400",
+});
+const pressStart = Press_Start_2P({
+  variable: "--font-press-start",
+  subsets: ["latin"],
+  weight: "400",
+});
+const vt323 = VT323({
+  variable: "--font-vt323",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -80,13 +112,14 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistMono.variable} ${ebGaramond.variable} ${inter.variable} ${anton.variable} ${permanentMarker.variable} ${pressStart.variable} ${vt323.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme={DEFAULT_THEME}
+          storageKey="vbm:theme"
+          themes={THEMES}
           disableTransitionOnChange
         >
           <PlayerProvider>

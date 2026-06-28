@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
+import { useSkin } from "../use-skin";
 import { AirplayButton } from "./airplay-button";
+import { Cassette } from "./cassette";
 import { usePlayer } from "./player-provider";
 import { SeekBar } from "./seek-bar";
 import { TransportControls } from "./transport-controls";
@@ -28,7 +30,9 @@ export function NowPlayingDrawer({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { current, expanded, setExpanded } = usePlayer();
+  const { current, expanded, setExpanded, state } = usePlayer();
+  const skin = useSkin();
+  const isCassette = skin === "cassette";
 
   return (
     <Drawer open={expanded} onOpenChange={setExpanded}>
@@ -48,28 +52,40 @@ export function NowPlayingDrawer({
         <DrawerHeader className="sr-only">
           <DrawerTitle>Now playing</DrawerTitle>
         </DrawerHeader>
-        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-y-auto px-6 pt-10 pb-10">
-          <div className="aspect-square w-48 shrink-0 overflow-hidden rounded-md border bg-muted">
-            {current?.coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={current.coverUrl}
-                alt=""
-                className="size-full object-cover"
-              />
-            ) : (
-              <div className="flex size-full items-center justify-center text-muted-foreground">
-                <Disc3 className="size-12" />
-              </div>
-            )}
-          </div>
+        <div className="vbm-np mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-y-auto px-6 pt-10 pb-10">
+          {isCassette ? (
+            <Cassette
+              playing={state.isPlaying}
+              label={[current?.artist, current?.title]
+                .filter(Boolean)
+                .join(" – ")}
+              className="w-full max-w-xs"
+            />
+          ) : (
+            <div className="vbm-np-cover aspect-square w-48 shrink-0 overflow-hidden rounded-md border bg-muted">
+              {current?.coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={current.coverUrl}
+                  alt=""
+                  className="size-full object-cover"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center text-muted-foreground">
+                  <Disc3 className="size-12" />
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="w-full text-center">
-            <p className="truncate font-mono text-base font-medium">
-              {current?.title ?? "–"}
-            </p>
+            {!isCassette ? (
+              <p className="vbm-np-title font-heading text-3xl leading-tight font-semibold text-balance">
+                {current?.title ?? "–"}
+              </p>
+            ) : null}
             {current?.artist ? (
-              <p className="truncate font-mono text-sm text-muted-foreground">
+              <p className="vbm-np-artist mt-1 text-base text-muted-foreground">
                 {current.artist}
               </p>
             ) : null}
@@ -84,7 +100,7 @@ export function NowPlayingDrawer({
           </div>
 
           {current?.description ? (
-            <div className="w-full border-t pt-4">
+            <div className="vbm-np-desc w-full border-t pt-4">
               <pre className="font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-muted-foreground">
                 {current.description}
               </pre>

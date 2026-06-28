@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { ModeToggle } from "./mode-toggle";
+import { ThemeSwitcher } from "./theme-switcher";
 
 const REPO_URL = "https://github.com/nickustinov/verybadmusic.com";
 
@@ -40,6 +41,7 @@ export function SiteHeader() {
             <GithubMark />
             github
           </a>
+          <ThemeSwitcher />
           <ModeToggle />
         </nav>
       </div>

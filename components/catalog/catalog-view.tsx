@@ -179,7 +179,7 @@ export function CatalogView({
       ) : null}
 
       {view === "tiles" ? (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="vbm-grid grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {visible.map((mix, index) => (
             <MixCard
               key={mix.id}

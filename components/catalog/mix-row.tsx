@@ -29,28 +29,30 @@ export function MixRow({
       onClick={onPlay}
       aria-label={`${isPlaying ? "Pause" : "Play"} ${mix.title}`}
       className={cn(
-        "group flex w-full items-center gap-3 border-b px-2 py-2 text-left transition-colors hover:bg-foreground hover:text-background focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50",
+        "vbm-item vbm-row group flex w-full items-center gap-3 border-b px-2 py-2 text-left transition-colors focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50",
         active && "bg-muted",
       )}
     >
-      <span className="w-6 text-center font-mono text-xs tabular-nums text-muted-foreground group-hover:text-background/70">
+      <span className="vbm-meta w-6 text-center font-mono text-xs tabular-nums text-muted-foreground">
         {String(index + 1).padStart(2, "0")}
       </span>
-      <span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden border">
+      <span className="vbm-media relative flex size-10 shrink-0 items-center justify-center overflow-hidden border">
         <CoverArt src={mix.coverUrl || undefined} />
-        <span className="absolute inset-0 flex items-center justify-center bg-background/40 text-foreground opacity-0 group-hover:opacity-100">
+        <span className="vbm-overlay absolute inset-0 flex items-center justify-center bg-background/40 text-foreground opacity-0 group-hover:opacity-100">
           {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
         </span>
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{mix.title}</span>
-        <span className="block truncate text-xs text-muted-foreground group-hover:text-background/70">
+        <span className="vbm-title block truncate text-sm font-medium font-heading">
+          {mix.title}
+        </span>
+        <span className="vbm-sub block truncate text-xs text-muted-foreground">
           {mix.artist || "–"}
           {mix.tags.length > 0 ? `  ·  ${mix.tags.join(" / ")}` : ""}
           {mix.releasedAt ? `  ·  ${formatReleaseDate(mix.releasedAt)}` : ""}
         </span>
       </span>
-      <span className="flex shrink-0 items-center gap-3 font-mono text-xs tabular-nums text-muted-foreground group-hover:text-background/70">
+      <span className="vbm-meta flex shrink-0 items-center gap-3 font-mono text-xs tabular-nums text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <Headphones className="size-3" />
           {formatCount(mix.plays)}

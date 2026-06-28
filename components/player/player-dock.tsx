@@ -4,7 +4,9 @@ import { Disc3 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import { useSkin } from "../use-skin";
 import { AirplayButton } from "./airplay-button";
+import { Cassette } from "./cassette";
 import { NowPlayingDrawer } from "./now-playing-drawer";
 import { usePlayer } from "./player-provider";
 import { ScrollingText } from "./scrolling-text";
@@ -15,36 +17,45 @@ import { VolumeControl } from "./volume-control";
 /** Persistent bottom transport. Hidden until something is queued. */
 export function PlayerDock() {
   const { current, state } = usePlayer();
+  const skin = useSkin();
   if (!current) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
+    <div className="fixed inset-x-0 bottom-0 z-40 overflow-x-clip border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <NowPlayingMarquee />
-      <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-3 sm:px-4">
+      <div className="vbm-dock mx-auto flex h-16 max-w-5xl items-center gap-3 px-3 sm:px-4">
         <NowPlayingDrawer className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded border bg-muted">
-            {current.coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={current.coverUrl}
-                alt=""
-                className="size-full object-cover"
-              />
-            ) : (
-              <Disc3
-                className={cn(
-                  "size-5 text-muted-foreground",
-                  state.isPlaying && "animate-spin [animation-duration:4s]",
-                )}
-              />
-            )}
-          </span>
+          {skin === "cassette" ? (
+            <Cassette
+              playing={state.isPlaying}
+              label={[current.artist, current.title].filter(Boolean).join(" – ")}
+              className="vbm-dock-cassette w-[13.5rem] shrink-0"
+            />
+          ) : (
+            <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded border bg-muted">
+              {current.coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={current.coverUrl}
+                  alt=""
+                  className="size-full object-cover"
+                />
+              ) : (
+                <Disc3
+                  className={cn(
+                    "size-5 text-muted-foreground",
+                    state.isPlaying && "animate-spin [animation-duration:4s]",
+                  )}
+                />
+              )}
+            </span>
+          )}
           <span className="min-w-0 flex-1">
-            <ScrollingText className="font-mono text-sm font-medium">
+            <ScrollingText className="vbm-dock-title font-mono text-sm font-medium">
               {current.title}
             </ScrollingText>
             {current.artist ? (
-              <ScrollingText className="font-mono text-xs text-muted-foreground">
+              <ScrollingText className="vbm-dock-sub font-mono text-xs text-muted-foreground">
                 {current.artist}
               </ScrollingText>
             ) : null}

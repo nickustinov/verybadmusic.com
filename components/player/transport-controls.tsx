@@ -19,7 +19,7 @@ export function TransportControls({
   const { state, toggle, next, prev } = usePlayer();
 
   return (
-    <ButtonGroup>
+    <ButtonGroup className="vbm-transport">
       <Button
         variant="outline"
         size={size}
