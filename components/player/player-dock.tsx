@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useSkin } from "../use-skin";
 import { AirplayButton } from "./airplay-button";
 import { Cassette } from "./cassette";
+import { FavouriteButton } from "./favourite-button";
 import { NowPlayingDrawer } from "./now-playing-drawer";
 import { usePlayer } from "./player-provider";
 import { ScrollingText } from "./scrolling-text";
@@ -65,6 +66,7 @@ export function PlayerDock() {
         <SeekBar className="hidden w-64 shrink-0 sm:flex" />
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-1">
+          <FavouriteButton id={current.id} className="size-10 sm:size-8" />
           <TransportControls size="icon" className="size-10 sm:size-8" />
           <AirplayButton className="size-10 sm:size-8" />
           <VolumeControl className="hidden sm:inline-flex" />

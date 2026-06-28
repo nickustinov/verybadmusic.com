@@ -291,10 +291,10 @@
   border-width: 2px;
   box-shadow: 4px 4px 0 0 var(--foreground);
 }
-:is(.manga, .manga-dark) .vbm-card:nth-child(3n) {
+:is(.manga, .manga-dark) .vbm-grid > :nth-child(3n) .vbm-card {
   transform: rotate(-1deg);
 }
-:is(.manga, .manga-dark) .vbm-card:nth-child(3n + 1) {
+:is(.manga, .manga-dark) .vbm-grid > :nth-child(3n + 1) .vbm-card {
   transform: rotate(0.8deg);
 }
 :is(.manga, .manga-dark) .vbm-card:hover {
@@ -622,9 +622,9 @@
   position: relative;
   container-type: inline-size;
   --reel-size: 16%;
-  --reel-l-x: 29%;
+  --reel-l-x: calc(29% + 1pt);
   --reel-l-y: 46%;
-  --reel-r-x: 70.8%;
+  --reel-r-x: calc(70.8% + 1pt);
   --reel-r-y: 46%;
 }
 .cassette-shell {

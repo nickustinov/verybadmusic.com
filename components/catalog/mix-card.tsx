@@ -8,6 +8,7 @@ import { formatCount, formatReleaseDate, formatTime } from "@/lib/format";
 import type { Skin } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
+import { FavouriteButton } from "../player/favourite-button";
 import { useSkin } from "../use-skin";
 import { CoverArt } from "./cover-art";
 
@@ -79,15 +80,21 @@ export function MixCard({
     SKIN_ICONS[skin];
 
   return (
-    <button
-      type="button"
-      onClick={onPlay}
-      aria-label={`${isPlaying ? "Pause" : "Play"} ${mix.title}`}
-      className={cn(
-        "vbm-item vbm-card group relative flex flex-col border bg-card text-left transition-all duration-150 focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50",
-        active && "ring-1 ring-foreground",
-      )}
-    >
+    <div className="vbm-card-wrap group relative">
+      <FavouriteButton
+        id={mix.id}
+        size="icon-sm"
+        className="absolute right-1 top-1 z-10 rounded bg-background/70 hover:bg-background/90"
+      />
+      <button
+        type="button"
+        onClick={onPlay}
+        aria-label={`${isPlaying ? "Pause" : "Play"} ${mix.title}`}
+        className={cn(
+          "vbm-item vbm-card relative flex w-full flex-col border bg-card text-left transition-all duration-150 focus-visible:outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50",
+          active && "ring-1 ring-foreground",
+        )}
+      >
       <div className="vbm-media relative aspect-square overflow-hidden border-b">
         <CoverArt src={mix.coverUrl || undefined} />
         <span className="absolute left-1.5 top-1.5 bg-background/80 px-1 font-mono text-[10px] tabular-nums text-foreground">
@@ -134,6 +141,7 @@ export function MixCard({
           </span>
         ) : null}
       </div>
-    </button>
+      </button>
+    </div>
   );
 }

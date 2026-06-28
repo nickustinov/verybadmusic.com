@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Dice5, Disc3 } from "lucide-react";
+import { Dice5, Disc3, Heart } from "lucide-react";
 
 import { recordPlayAction } from "@/app/actions";
 import { usePlayer } from "@/components/player/player-provider";
+import { useFavourites } from "@/components/use-favourites";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { Mix } from "@/lib/catalog/schema";
 import { mixToTrack } from "@/lib/player/track";
@@ -75,6 +76,17 @@ export function CatalogView({
 
   const [tag, setTag] = React.useState<string | null>(null);
   const [sort, setSort] = React.useState<SortMode>("added");
+  const [favsOnly, setFavsOnly] = React.useState(false);
+
+  const favs = useFavourites();
+  const favCount = React.useMemo(
+    () => mixes.reduce((n, m) => n + (favs.has(m.id) ? 1 : 0), 0),
+    [mixes, favs],
+  );
+  // Drop the favourites filter once nothing is favourited anymore.
+  React.useEffect(() => {
+    if (favsOnly && favCount === 0) setFavsOnly(false);
+  }, [favsOnly, favCount]);
 
   // Preselect a shared mix once on mount (loaded paused; browsers block autoplay).
   const didPreselect = React.useRef(false);
@@ -94,9 +106,10 @@ export function CatalogView({
   }, [mixes]);
 
   const visible = React.useMemo(() => {
-    const filtered = tag ? mixes.filter((m) => m.tags.includes(tag)) : mixes;
-    return sortMixes(filtered, sort);
-  }, [mixes, tag, sort]);
+    let list = favsOnly ? mixes.filter((m) => favs.has(m.id)) : mixes;
+    if (tag) list = list.filter((m) => m.tags.includes(tag));
+    return sortMixes(list, sort);
+  }, [mixes, tag, sort, favsOnly, favs]);
 
   const tracks = React.useMemo(() => visible.map(mixToTrack), [visible]);
 
@@ -154,16 +167,29 @@ export function CatalogView({
         </div>
       </div>
 
-      {allTags.length > 0 ? (
+      {allTags.length > 0 || favCount > 0 ? (
         <div className="mb-3 flex flex-wrap gap-1.5">
-          <Button
-            variant={tag === null ? "default" : "outline"}
-            size="xs"
-            className="lowercase"
-            onClick={() => setTag(null)}
-          >
-            all
-          </Button>
+          {allTags.length > 0 ? (
+            <Button
+              variant={tag === null ? "default" : "outline"}
+              size="xs"
+              className="lowercase"
+              onClick={() => setTag(null)}
+            >
+              all
+            </Button>
+          ) : null}
+          {favCount > 0 ? (
+            <Button
+              variant={favsOnly ? "default" : "outline"}
+              size="xs"
+              className="lowercase"
+              onClick={() => setFavsOnly((v) => !v)}
+            >
+              <Heart className="size-3 fill-red-500 text-red-500" />
+              favourites
+            </Button>
+          ) : null}
           {allTags.map((t) => (
             <Button
               key={t}

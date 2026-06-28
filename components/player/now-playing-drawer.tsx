@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useSkin } from "../use-skin";
 import { AirplayButton } from "./airplay-button";
 import { Cassette } from "./cassette";
+import { FavouriteButton } from "./favourite-button";
 import { usePlayer } from "./player-provider";
 import { SeekBar } from "./seek-bar";
 import { TransportControls } from "./transport-controls";
@@ -97,6 +98,9 @@ export function NowPlayingDrawer({
             <VolumeControl />
             <TransportControls size="icon-lg" />
             <AirplayButton />
+            {current ? (
+              <FavouriteButton id={current.id} size="icon-lg" />
+            ) : null}
           </div>
 
           {current?.description ? (
