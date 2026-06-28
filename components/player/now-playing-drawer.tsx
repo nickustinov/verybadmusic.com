@@ -40,7 +40,14 @@ export function NowPlayingDrawer({
       <DrawerTrigger className={cn("min-w-0 text-left", className)}>
         {children}
       </DrawerTrigger>
-      <DrawerContent showHandle={false}>
+      <DrawerContent showHandle={false} className="overflow-hidden">
+        {current?.coverUrl ? (
+          <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={current.coverUrl} alt="" className="size-full object-cover" />
+            <div className="absolute inset-0 bg-background/75" />
+          </div>
+        ) : null}
         <DrawerClose
           aria-label="Close"
           className={cn(
@@ -53,7 +60,7 @@ export function NowPlayingDrawer({
         <DrawerHeader className="sr-only">
           <DrawerTitle>Now playing</DrawerTitle>
         </DrawerHeader>
-        <div className="vbm-np mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-y-auto px-6 pt-10 pb-10">
+        <div className="vbm-np relative z-10 mx-auto flex w-full max-w-md flex-col items-center gap-6 overflow-y-auto px-6 pt-10 pb-10">
           {isCassette ? (
             <Cassette
               playing={state.isPlaying}

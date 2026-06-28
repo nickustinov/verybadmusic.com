@@ -22,9 +22,19 @@ export function PlayerDock() {
   if (!current) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 overflow-x-clip border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <NowPlayingMarquee />
-      <div className="vbm-dock mx-auto flex h-16 max-w-5xl items-center gap-3 px-3 sm:px-4">
+    <div className="fixed inset-x-0 bottom-0 z-40 overflow-x-clip border-t">
+      {current.coverUrl ? (
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={current.coverUrl} alt="" className="size-full object-cover" />
+          <div className="absolute inset-0 bg-background/75" />
+        </div>
+      ) : (
+        <div aria-hidden className="absolute inset-0 z-0 bg-background/95" />
+      )}
+      <div className="relative z-10">
+        <NowPlayingMarquee />
+        <div className="vbm-dock mx-auto flex h-16 max-w-5xl items-center gap-3 px-3 sm:px-4">
         <NowPlayingDrawer className="flex min-w-0 flex-1 items-center gap-3">
           {skin === "cassette" ? (
             <Cassette
@@ -71,6 +81,7 @@ export function PlayerDock() {
           <AirplayButton className="size-10 sm:size-8" />
           <VolumeControl className="hidden sm:inline-flex" />
         </div>
+      </div>
       </div>
     </div>
   );
