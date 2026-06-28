@@ -43,10 +43,29 @@ describe("parseDriveId", () => {
 });
 
 describe("driveStreamUrl", () => {
-  it("builds a same-origin streaming url for the proxy route", () => {
-    expect(driveStreamUrl(`https://drive.google.com/file/d/${ID}/view`)).toBe(
-      `/api/stream/${ID}`,
-    );
+  it("falls back to the proxy route when no API key is configured", () => {
+    const prev = process.env.NEXT_PUBLIC_DRIVE_API_KEY;
+    delete process.env.NEXT_PUBLIC_DRIVE_API_KEY;
+    try {
+      expect(driveStreamUrl(`https://drive.google.com/file/d/${ID}/view`)).toBe(
+        `/api/stream/${ID}`,
+      );
+    } finally {
+      if (prev !== undefined) process.env.NEXT_PUBLIC_DRIVE_API_KEY = prev;
+    }
+  });
+
+  it("uses the direct Drive API url when an API key is configured", () => {
+    const prev = process.env.NEXT_PUBLIC_DRIVE_API_KEY;
+    process.env.NEXT_PUBLIC_DRIVE_API_KEY = "test-key";
+    try {
+      expect(driveStreamUrl(`https://drive.google.com/file/d/${ID}/view`)).toBe(
+        `https://www.googleapis.com/drive/v3/files/${ID}?alt=media&key=test-key`,
+      );
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_DRIVE_API_KEY;
+      else process.env.NEXT_PUBLIC_DRIVE_API_KEY = prev;
+    }
   });
 
   it("returns null when no id can be parsed", () => {

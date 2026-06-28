@@ -102,6 +102,7 @@ export function MixEditor({ mix }: { mix?: Mix }) {
     const audio = new Audio();
     probeRef.current = audio;
     audio.preload = "metadata";
+    audio.crossOrigin = "anonymous"; // CORS for direct Drive API metadata reads
     audio.addEventListener("loadedmetadata", () => {
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         setDuration(Math.round(audio.duration));
