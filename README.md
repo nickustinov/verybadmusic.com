@@ -1,75 +1,96 @@
 # verybadmusic.com
 
-A minimal, brutalist web player for DJ sets. Audio lives on Google Drive and
-streams straight to the browser; a password-protected admin manages the catalog.
-Built with Next.js (App Router), Tailwind v4 and shadcn/ui (base-nova). Dark mode
-by default.
+A minimal, brutalist web player for DJ sets. Mixes live on Google Drive and
+stream **directly to the browser** (no server in the audio path); a
+password-protected admin manages the catalog. Built with Next.js 16 (App Router),
+Tailwind v4 and shadcn/ui (base-nova). Follows the system theme, toggle in the
+corner.
 
 ## How it works
 
-- **Player** – a single native `<audio>` element skinned entirely with shadcn
-  controls. Native media is what makes **AirPlay** (Safari/iOS) and the Remote
-  Playback API (Chrome → Cast) possible. Playback persists across views via a
-  React context (`components/player/player-provider.tsx`).
-- **Streaming** – audio plays directly from Google Drive (no Vercel bandwidth).
-  Any Drive share link or file id is normalised in `lib/drive.ts` to
-  `https://drive.google.com/uc?export=download&id=<id>&confirm=t`. The mix files
-  must be shared "anyone with the link". If large-file seeking proves unreliable,
-  swap `driveStreamUrl` for a Range-proxy route – it is the only Drive touch-point.
-- **Storage** – the whole catalog is one public JSON document in Vercel Blob
-  (`catalog.json`), cover images sit alongside it. Reads go straight to Blob each
-  request so edits show up immediately; audio never passes through a function.
+- **Player** – one native `<audio>` element skinned entirely with shadcn controls.
+  Native media is what enables **AirPlay** (Safari/iOS) and the Remote Playback
+  API (Chrome → Cast). Playback persists across pages via a React context
+  (`components/player/player-provider.tsx`).
+- **Streaming** – audio streams **directly from the Google Drive API**
+  (`www.googleapis.com/drive/v3/files/<id>?alt=media&key=…`), which sends CORS
+  headers and supports Range, so the browser plays and seeks it with **no Vercel
+  function or bandwidth**. It needs a referrer-restricted Drive API key
+  (`NEXT_PUBLIC_DRIVE_API_KEY`) and files shared "anyone with the link". The whole
+  Drive coupling is `lib/drive.ts`. **MP3 only** – Drive serves WAV/AIFF as
+  `octet-stream`, which browsers won't decode.
+- **Catalog** – mix metadata lives in **Upstash Redis (Vercel KV)** for fast,
+  consistent reads/writes (`lib/catalog/store.ts`). **Cover images** go to
+  **Vercel Blob**.
+- **Sharing** – playing a mix updates the URL to `/m/<slug>` (History API, no
+  reload). Opening that link loads the mix selected in the player and expands it;
+  links unfurl with the cover + title.
 - **Auth** – username/password from env, exchanged for a signed httpOnly session
-  cookie (`jose`). `proxy.ts` guards `/admin`.
+  cookie (`jose`). `proxy.ts` (middleware) guards `/vbm-admin`.
+- **SEO** – dynamic `sitemap.xml`, `robots.txt`, rich metadata, JSON-LD
+  (`WebSite` + per-mix `MusicRecording`), and a branded OpenGraph image.
+
+## Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Admin login (`/vbm-admin`) |
+| `SESSION_SECRET` | Signs the session cookie (`openssl rand -base64 32`) |
+| `NEXT_PUBLIC_DRIVE_API_KEY` | Referrer-restricted Google Drive API key (audio playback). No fallback – without it, playback won't work. |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Upstash Redis (catalog). Injected when you connect the store on Vercel. |
+| Blob credentials | Cover images. On Vercel, connecting a **public** Blob store provides `BLOB_STORE_ID` + OIDC auth; locally use a `BLOB_READ_WRITE_TOKEN`. |
+
+See `.env.example`. The `NEXT_PUBLIC_` prefix on the Drive key is intentional – it
+is a public, referrer-restricted browser key (like a Google Maps key), not a secret.
+
+## Google Drive setup (one-time)
+
+1. [Google Cloud Console](https://console.cloud.google.com) → create/select a
+   project (no billing needed). **APIs & Services → Library → enable Google Drive API**.
+2. **Credentials → Create credentials → API key**. Then **restrict** it:
+   - **Application restrictions → Websites (HTTP referrers)**: add
+     `https://verybadmusic.com/*`, `http://localhost:3000/*`,
+     `https://*.vercel.app/*`.
+   - **API restrictions → Google Drive API** only.
+3. Put it in `NEXT_PUBLIC_DRIVE_API_KEY` (locally and on Vercel). `NEXT_PUBLIC_*`
+   is baked in at build time, so **redeploy** after changing it.
+4. Share each mix MP3 as **"Anyone with the link → Viewer"**.
+
+The Drive API is **free** (no billing); limits are rate quotas (HTTP 429 if
+exceeded) plus a per-file ~24h download-quota lockout if a single file is hammered.
 
 ## Local development
 
 ```bash
 pnpm install
-cp .env.example .env.local   # then fill in the values
-pnpm dev
+cp .env.example .env.local   # fill in the values
+pnpm dev                     # http://localhost:3000
 ```
 
-Environment variables (`.env.local`):
-
-| Variable | Purpose |
-| --- | --- |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Admin login |
-| `SESSION_SECRET` | Signs the session cookie (`openssl rand -base64 32`) |
-| Blob credentials | See below – `BLOB_STORE_ID` + `VERCEL_OIDC_TOKEN`, or a `BLOB_READ_WRITE_TOKEN` |
-
-**Blob auth.** `@vercel/blob` v2 authenticates with OIDC: `BLOB_STORE_ID` plus a
-`VERCEL_OIDC_TOKEN`. On Vercel both are present automatically once a Blob store
-is connected – no static token needed. Locally, run
-`vercel link && vercel env pull .env.local` to fetch the store id and a
-short-lived OIDC token, or create a Read/Write token in the Blob store settings
-and set `BLOB_READ_WRITE_TOKEN`. Without credentials the app still runs – the
-catalog just reads as empty.
+For Blob/KV locally, either paste tokens into `.env.local` or run
+`vercel link && vercel env pull .env.local`.
 
 ## Scripts
 
 ```bash
-pnpm dev          # dev server
-pnpm test         # unit tests (vitest) – drive parsing, sessions, schema, player reducer
-pnpm lint         # eslint
-pnpm build        # production build
+pnpm dev     # dev server
+pnpm test    # unit tests (vitest) – drive url, sessions, schema, player reducer, slug, format
+pnpm lint    # eslint
+pnpm build   # production build
 ```
 
 ## Deploying to Vercel
 
-1. Import the repo; the framework preset is Next.js.
-2. Create / connect a **Blob** store (Storage tab). This provisions
-   `BLOB_STORE_ID` (+ a webhook key); the SDK authenticates via the auto-injected
-   `VERCEL_OIDC_TOKEN`. No static `BLOB_READ_WRITE_TOKEN` is required.
-3. Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SESSION_SECRET` in project env vars.
-4. Deploy. The public pages stay light (functions only run for admin writes and
-   the per-request catalog read); audio streams from Drive.
+1. Import the repo (framework preset: **Next.js**, root `./`).
+2. **Storage → connect Upstash Redis** (Pay As You Go) – injects `KV_REST_API_*`.
+3. **Storage → connect a public Blob store** (cover images).
+4. **Settings → Environment Variables** (Production + Preview): `ADMIN_USERNAME`,
+   `ADMIN_PASSWORD`, `SESSION_SECRET`, `NEXT_PUBLIC_DRIVE_API_KEY`.
+5. Deploy. Audio never touches Vercel – playback uses no functions or bandwidth.
 
-## Manual checks (browser only)
+## Managing mixes
 
-These need a real Drive mp3 and, for AirPlay, Safari/iOS:
-
-- Sign in at `/admin`, add a mix with a public Drive URL + cover, confirm it
-  appears on `/`.
-- Toggle tiles/list and dark/light; play a mix, scrub, change volume.
-- On macOS Safari / iOS the AirPlay button appears when a target is available.
+Sign in at **`/vbm-admin`**. Add/edit each mix on its own page: paste a Drive
+share link (length is auto-detected in the browser), drop in a cover (auto-resized
+to JPEG), tags, tracklist. New mixes land at the top; reorder with the arrows.
+Listeners get tiles/list views with a one-click tag filter.
