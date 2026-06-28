@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import { ModeToggle } from "./mode-toggle";
 
@@ -31,10 +32,14 @@ export function SiteHeader() {
             href={REPO_URL}
             target="_blank"
             rel="noreferrer noopener"
-            aria-label="Source on GitHub"
-            className={buttonVariants({ variant: "ghost", size: "icon" })}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "font-mono lowercase",
+            )}
           >
             <GithubMark />
+            <span className="sm:hidden">github</span>
+            <span className="hidden sm:inline">view on github</span>
           </a>
           <ModeToggle />
         </nav>
