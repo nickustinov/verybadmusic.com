@@ -1,5 +1,5 @@
 import type { Mix } from "@/lib/catalog/schema";
-import { driveStreamUrl } from "@/lib/drive";
+import { resolveStreamUrl } from "@/lib/drive";
 import { slugify } from "@/lib/slug";
 
 import type { PlayerTrack } from "./store";
@@ -11,7 +11,7 @@ export function mixToTrack(mix: Mix): PlayerTrack {
     title: mix.title,
     artist: mix.artist,
     coverUrl: mix.coverUrl,
-    src: driveStreamUrl(mix.driveUrl) ?? mix.driveUrl,
+    src: resolveStreamUrl(mix.driveUrl) ?? mix.driveUrl,
     description: mix.description,
     slug: slugify(mix.title),
   };

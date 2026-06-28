@@ -209,8 +209,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       <audio
         ref={audioRef}
         preload="metadata"
-        // Needed for direct Drive API playback (CORS); harmless for the proxy.
-        crossOrigin="anonymous"
         onTimeUpdate={(e) =>
           dispatch({ type: "SET_TIME", time: e.currentTarget.currentTime })
         }

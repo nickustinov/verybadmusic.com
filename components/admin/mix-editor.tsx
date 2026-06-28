@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import type { Mix } from "@/lib/catalog/schema";
-import { driveStreamUrl } from "@/lib/drive";
+import { resolveStreamUrl } from "@/lib/drive";
 import { formatTime } from "@/lib/format";
 
 /** Downscale an image and re-encode as JPEG so covers stay small and under the upload limit. */
@@ -52,7 +52,7 @@ export function MixEditor({ mix }: { mix?: Mix }) {
   );
 
   // Auto-detect track length: load just the metadata of the stream and read its
-  // duration. Runs (debounced) whenever a valid Drive URL is entered.
+  // duration. Runs (debounced) whenever a valid audio URL is entered.
   const [driveUrl, setDriveUrl] = React.useState(mix?.driveUrl ?? "");
   const [duration, setDuration] = React.useState<number | null>(
     mix?.durationSec ?? null,
@@ -102,7 +102,6 @@ export function MixEditor({ mix }: { mix?: Mix }) {
     const audio = new Audio();
     probeRef.current = audio;
     audio.preload = "metadata";
-    audio.crossOrigin = "anonymous"; // CORS for direct Drive API metadata reads
     audio.addEventListener("loadedmetadata", () => {
       if (Number.isFinite(audio.duration) && audio.duration > 0) {
         setDuration(Math.round(audio.duration));
@@ -116,7 +115,7 @@ export function MixEditor({ mix }: { mix?: Mix }) {
   const onDriveUrlChange = (value: string) => {
     setDriveUrl(value);
     if (timerRef.current) clearTimeout(timerRef.current);
-    const streamUrl = driveStreamUrl(value);
+    const streamUrl = resolveStreamUrl(value);
     if (!streamUrl) {
       setDuration(null);
       setDetecting(false);
@@ -141,7 +140,7 @@ export function MixEditor({ mix }: { mix?: Mix }) {
             {mix ? "edit mix" : "add mix"}
           </h1>
           <p className="font-mono text-xs text-muted-foreground">
-            paste a Google Drive share link and describe the set.
+            paste the audio url (r2 or Google Drive) and describe the set.
           </p>
         </div>
       </header>
@@ -159,9 +158,9 @@ export function MixEditor({ mix }: { mix?: Mix }) {
         </Field>
 
         <Field
-          label="google drive url"
+          label="audio url"
           htmlFor="driveUrl"
-          hint="share link or file id of the mp3 / wav"
+          hint="r2 url, or a google drive share link / file id"
         >
           <Input
             id="driveUrl"

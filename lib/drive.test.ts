@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { driveStreamUrl, parseDriveId } from "./drive";
+import { driveStreamUrl, parseDriveId, resolveStreamUrl } from "./drive";
 
 const ID = "1A2b3C4d5E6f7G8h9I0jKlMnOpQrStUvW";
 
@@ -39,6 +39,31 @@ describe("parseDriveId", () => {
 
   it("does not treat a short slug as an id", () => {
     expect(parseDriveId("warehouse-dub")).toBeNull();
+  });
+});
+
+describe("resolveStreamUrl", () => {
+  it("passes a direct https url through unchanged (e.g. R2)", () => {
+    const url = "https://pub-abc.r2.dev/my-mix.mp3";
+    expect(resolveStreamUrl(url)).toBe(url);
+  });
+
+  it("resolves a Drive link to the Drive API url", () => {
+    const prev = process.env.NEXT_PUBLIC_DRIVE_API_KEY;
+    process.env.NEXT_PUBLIC_DRIVE_API_KEY = "test-key";
+    try {
+      expect(resolveStreamUrl(`https://drive.google.com/file/d/${ID}/view`)).toBe(
+        `https://www.googleapis.com/drive/v3/files/${ID}?alt=media&key=test-key`,
+      );
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_DRIVE_API_KEY;
+      else process.env.NEXT_PUBLIC_DRIVE_API_KEY = prev;
+    }
+  });
+
+  it("rejects non-url, non-id junk", () => {
+    expect(resolveStreamUrl("warehouse-dub")).toBeNull();
+    expect(resolveStreamUrl("")).toBeNull();
   });
 });
 

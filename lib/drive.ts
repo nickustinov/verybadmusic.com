@@ -1,9 +1,11 @@
 /**
  * Google Drive coupling lives entirely in this file. Audio streams DIRECTLY from
- * the Drive API (www.googleapis.com), which sends CORS headers and isn't blocked
- * by Sec-Fetch-Site, so the browser plays + seeks it with NO Vercel function or
- * bandwidth. Requires NEXT_PUBLIC_DRIVE_API_KEY (a referrer-restricted, public
- * browser key) and files shared "anyone with the link".
+ * the Drive API (www.googleapis.com): a plain <audio> element loads it as media
+ * (no-cors), so the browser plays + seeks it with NO Vercel function or
+ * bandwidth. The element must NOT set crossOrigin — Drive's media endpoint sends
+ * no Access-Control-Allow-Origin, so CORS mode would block it. Requires
+ * NEXT_PUBLIC_DRIVE_API_KEY (a referrer-restricted, public browser key) and
+ * files shared "anyone with the link".
  *
  * There is no server proxy / fallback: if the key is missing or wrong, playback
  * fails fast rather than silently routing through (and billing) a function.
@@ -42,4 +44,17 @@ export function driveStreamUrl(input: string | null | undefined): string | null 
   if (!id) return null;
   const key = process.env.NEXT_PUBLIC_DRIVE_API_KEY ?? "";
   return `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${key}`;
+}
+
+/**
+ * Resolve a stored source into a playable URL. Accepts a Google Drive link/id
+ * (→ Drive API URL) or a direct media URL (e.g. an R2 bucket URL), which is used
+ * as-is. Returns null when neither applies. This is the single source of truth
+ * for what the player, admin probe and save action treat as a valid source.
+ */
+export function resolveStreamUrl(input: string | null | undefined): string | null {
+  const drive = driveStreamUrl(input);
+  if (drive) return drive;
+  const value = input?.trim() ?? "";
+  return /^https?:\/\/\S+$/i.test(value) ? value : null;
 }

@@ -13,7 +13,7 @@ import {
   uploadCover,
   writeCatalog,
 } from "@/lib/catalog/store";
-import { parseDriveId } from "@/lib/drive";
+import { parseDriveId, resolveStreamUrl } from "@/lib/drive";
 
 async function assertAdmin() {
   if (!(await isAuthenticated())) {
@@ -44,10 +44,13 @@ export async function saveMixAction(
   }
   const data = parsed.data;
 
-  const driveId = parseDriveId(data.driveUrl);
-  if (!driveId) {
-    return { error: "Could not read a Google Drive file id from that URL." };
+  // Accept either a Google Drive link/id or a direct media URL (e.g. R2).
+  if (!resolveStreamUrl(data.driveUrl)) {
+    return {
+      error: "Enter a Google Drive link or a direct https:// URL to the audio file.",
+    };
   }
+  const driveId = parseDriveId(data.driveUrl) ?? "";
 
   const existingId = String(formData.get("id") ?? "");
   const id = existingId || nanoid(10);

@@ -27,10 +27,10 @@ describe("mixSchema", () => {
     expect(() => mixSchema.parse({ ...validMix, title: "" })).toThrow();
   });
 
-  it("rejects a mix without a drive id", () => {
+  it("defaults driveId to empty for direct-URL sources (e.g. R2)", () => {
     const { driveId: _driveId, ...rest } = validMix;
     void _driveId;
-    expect(() => mixSchema.parse(rest)).toThrow();
+    expect(mixSchema.parse(rest).driveId).toBe("");
   });
 });
 

@@ -8,7 +8,8 @@ export const mixSchema = z.object({
   description: z.string().default(""),
   coverUrl: z.string().default(""),
   driveUrl: z.string().min(1),
-  driveId: z.string().min(1),
+  // Parsed Drive id when the source is a Drive link; empty for direct URLs (R2).
+  driveId: z.string().default(""),
   durationSec: z.number().int().nonnegative().optional(),
   tags: z.array(z.string()).default([]),
   releasedAt: z.string().default(""),
