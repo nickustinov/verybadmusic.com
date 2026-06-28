@@ -702,10 +702,14 @@
   margin-left: -3.125rem;
   filter: drop-shadow(0 22px 40px rgb(0 0 0 / 0.5));
 }
-/* On mobile, slide it far left so only the right half of the tape shows. */
+/* On mobile, slide it far left so only the right half of the tape shows, flush
+   to the screen edge (no dock padding on that side). */
 @media (max-width: 639px) {
   .vbm-dock-cassette {
     margin-left: -9rem;
+  }
+  :is(.cassette, .cassette-dark) .vbm-dock {
+    padding-left: 0;
   }
 }
 
