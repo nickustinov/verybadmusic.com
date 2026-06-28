@@ -38,8 +38,7 @@ export function SiteHeader() {
             )}
           >
             <GithubMark />
-            <span className="sm:hidden">github</span>
-            <span className="hidden sm:inline">view on github</span>
+            github
           </a>
           <ModeToggle />
         </nav>
