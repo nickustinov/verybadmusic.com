@@ -20,7 +20,7 @@ function GithubMark() {
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/70">
+    <header className="border-b bg-background">
       <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-3 sm:px-4">
         <Link
           href="/"
