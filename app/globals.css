@@ -713,29 +713,6 @@
   }
 }
 
-/* ── Non-flat backdrop: soft theme-tinted colour dust + faint film grain,
-   both fixed so they sit behind everything and don't scroll. ──────────────── */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  background:
-    radial-gradient(42rem 42rem at 12% 6%, color-mix(in oklch, var(--primary) 15%, transparent), transparent 60%),
-    radial-gradient(38rem 38rem at 88% 94%, color-mix(in oklch, var(--accent-foreground) 13%, transparent), transparent 60%),
-    radial-gradient(34rem 34rem at 78% 16%, color-mix(in oklch, var(--ring) 9%, transparent), transparent 55%);
-}
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;

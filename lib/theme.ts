@@ -20,7 +20,7 @@ export type Skin = (typeof SKINS)[number]["key"];
 
 export const THEMES = SKINS.flatMap((s) => [s.key, `${s.key}-dark`]);
 
-export const DEFAULT_THEME = "cassette";
+export const DEFAULT_THEME = "terminal";
 
 export function isDark(theme: string | undefined): boolean {
   return !!theme?.endsWith("-dark");
