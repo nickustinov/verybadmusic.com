@@ -185,7 +185,7 @@ export function MixEditor({ mix }: { mix?: Mix }) {
             {mix ? "edit mix" : "add mix"}
           </h1>
           <p className="font-mono text-xs text-muted-foreground">
-            paste the audio url (r2 or Google Drive) and describe the set.
+            upload the audio file (or paste an r2 url) and describe the set.
           </p>
         </div>
       </header>
@@ -205,14 +205,14 @@ export function MixEditor({ mix }: { mix?: Mix }) {
         <Field
           label="audio url"
           htmlFor="driveUrl"
-          hint="r2 url, or a google drive share link / file id"
+          hint="upload a file below, or paste an r2 url"
         >
           <Input
             id="driveUrl"
             name="driveUrl"
             value={driveUrl}
             onChange={(e) => onDriveUrlChange(e.target.value)}
-            placeholder="https://drive.google.com/file/d/…/view"
+            placeholder="https://audio.verybadmusic.com/your-mix.mp3"
             required
           />
           <p className="font-mono text-[10px] text-muted-foreground">
