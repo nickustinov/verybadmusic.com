@@ -26,7 +26,11 @@ export function PlayerDock() {
       {current.coverUrl ? (
         <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={current.coverUrl} alt="" className="size-full object-cover" />
+          <img
+            src={current.coverUrl}
+            alt=""
+            className="size-full scale-105 object-cover blur-md"
+          />
           <div className="absolute inset-0 bg-background/75" />
         </div>
       ) : (

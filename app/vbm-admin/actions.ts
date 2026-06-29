@@ -14,6 +14,7 @@ import {
   writeCatalog,
 } from "@/lib/catalog/store";
 import { parseDriveId, resolveStreamUrl } from "@/lib/drive";
+import { createUploadUrl, r2Key } from "@/lib/r2";
 
 async function assertAdmin() {
   if (!(await isAuthenticated())) {
@@ -92,6 +93,21 @@ export async function saveMixAction(
   await writeCatalog({ ...catalog, mixes });
 
   redirect("/vbm-admin");
+}
+
+export type UploadTarget = { uploadUrl: string; publicUrl: string };
+
+/** Presigned URL for a direct browser upload to R2 (bypasses Vercel limits). */
+export async function createUploadUrlAction(
+  filename: string,
+): Promise<UploadTarget | { error: string }> {
+  await assertAdmin();
+  if (!filename.trim()) return { error: "Missing filename." };
+  try {
+    return await createUploadUrl(r2Key(filename));
+  } catch {
+    return { error: "Upload is not configured (missing R2 settings)." };
+  }
 }
 
 export async function deleteMixAction(id: string): Promise<void> {

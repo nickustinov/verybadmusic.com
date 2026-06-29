@@ -3,9 +3,13 @@
 import * as React from "react";
 import { useActionState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 
-import { saveMixAction, type MixFormState } from "@/app/vbm-admin/actions";
+import {
+  createUploadUrlAction,
+  saveMixAction,
+  type MixFormState,
+} from "@/app/vbm-admin/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Mix } from "@/lib/catalog/schema";
 import { resolveStreamUrl } from "@/lib/drive";
 import { formatTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 /** Downscale an image and re-encode as JPEG so covers stay small and under the upload limit. */
 async function optimiseImage(
@@ -60,6 +65,10 @@ export function MixEditor({ mix }: { mix?: Mix }) {
   const [detecting, setDetecting] = React.useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const probeRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // Direct-to-R2 upload (no Vercel size limit): presign on the server, PUT here.
+  const [uploadPct, setUploadPct] = React.useState<number | null>(null);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   // Cover image: downscale to JPEG in the browser before it is submitted.
   const coverRef = React.useRef<HTMLInputElement>(null);
@@ -125,6 +134,42 @@ export function MixEditor({ mix }: { mix?: Mix }) {
     timerRef.current = setTimeout(() => probe(streamUrl), 700);
   };
 
+  const onUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    setUploadError(null);
+    setUploadPct(0);
+
+    const target = await createUploadUrlAction(file.name);
+    if ("error" in target) {
+      setUploadError(target.error);
+      setUploadPct(null);
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", target.uploadUrl);
+    xhr.setRequestHeader("Content-Type", file.type || "audio/mpeg");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        setUploadPct(null);
+        onDriveUrlChange(target.publicUrl);
+      } else {
+        setUploadError(`upload failed (${xhr.status})`);
+        setUploadPct(null);
+      }
+    };
+    xhr.onerror = () => {
+      setUploadError("upload failed (network / CORS)");
+      setUploadPct(null);
+    };
+    xhr.send(file);
+  };
+
   return (
     <main className="mx-auto w-full max-w-2xl px-3 pt-6 pb-28 sm:px-4">
       <header className="mb-6 flex items-center gap-3">
@@ -177,6 +222,35 @@ export function MixEditor({ mix }: { mix?: Mix }) {
                 ? `length: ${formatTime(duration)} · detected automatically`
                 : "length is detected automatically from a valid url"}
           </p>
+
+          <div className="mt-1 flex flex-col gap-1">
+            <label
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "w-fit cursor-pointer font-mono lowercase",
+                uploadPct !== null && "pointer-events-none opacity-60",
+              )}
+            >
+              <Upload />
+              {uploadPct !== null ? `uploading… ${uploadPct}%` : "upload a file to r2"}
+              <input
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={onUpload}
+                disabled={uploadPct !== null}
+              />
+            </label>
+            {uploadError ? (
+              <p className="font-mono text-[10px] text-destructive">
+                {uploadError}
+              </p>
+            ) : (
+              <p className="font-mono text-[10px] text-muted-foreground">
+                large files upload straight to r2 (no size limit).
+              </p>
+            )}
+          </div>
         </Field>
 
         <Field
